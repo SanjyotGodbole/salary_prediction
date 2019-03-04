@@ -1,0 +1,295 @@
+---
+title: "Salary_Data"
+author: "Sanjyot Godbole"
+date: "February 12, 2019"
+output: 
+  html_document:
+    toc: true
+    theme: united
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+      smooth_scroll: false  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Clearing the environment
+```{r ClearingEnvironment}
+rm(list = ls(all=TRUE))
+```
+
+##Loading the dataset 
+```{r}
+
+Train_Data = read.csv("Train-1550224040162.csv", header = T,sep = ",")
+dataToPredict = read.csv("Test-1550224068068.csv", header = T,sep = ",")
+dim(Train_Data)
+dim(dataToPredict)
+
+```
+
+##Descriptive Analysis of Train_Data
+```{r}
+str(Train_Data)
+head(Train_Data)
+tail(Train_Data)
+summary(Train_Data)
+names(Train_Data)
+```
+
+## Pre-processing 
+### Changing the datatypes of some columns
+
+```{r }
+Train_Data$CollegeTier = as.factor(Train_Data$CollegeTier)
+Train_Data$CollegeCode = as.factor(Train_Data$CollegeCode)
+Train_Data$CityCode = as.factor(Train_Data$CityCode)
+Train_Data$CityTier = as.factor(Train_Data$CityTier)
+
+
+Train_Data$Year.Of.Twelth.Completion = as.numeric(Train_Data$Year.Of.Twelth.Completion)
+Train_Data$Year.of.Graduation.Completion = as.numeric(Train_Data$Year.of.Graduation.Completion)
+Train_Data$Score.in.Logical.skill = as.numeric(Train_Data$Score.in.Logical.skill)
+Train_Data$Score.in.Quantitative.ability = as.numeric(Train_Data$Score.in.Quantitative.ability)
+Train_Data$Score.in.Quantitative.ability = as.numeric(Train_Data$Score.in.Quantitative.ability)
+Train_Data$Score.in.ComputerProgramming = as.numeric(Train_Data$Score.in.ComputerProgramming)
+Train_Data$Score.in.ElectronicsAndSemicon = as.numeric(Train_Data$Score.in.ElectronicsAndSemicon)
+Train_Data$Score.in.ComputerScience = as.numeric(Train_Data$Score.in.ComputerScience)
+Train_Data$Score.in.MechanicalEngg = as.numeric(Train_Data$Score.in.MechanicalEngg)
+Train_Data$Score.in.ElectricalEngg = as.numeric(Train_Data$Score.in.ElectricalEngg)
+Train_Data$Score.in.TelecomEngg = as.numeric(Train_Data$Score.in.TelecomEngg)
+Train_Data$Score.in.CivilEngg = as.numeric(Train_Data$Score.in.CivilEngg)
+
+
+Train_Data$Date.Of.Birth = as.Date(Train_Data$Date.Of.Birth)
+
+```
+
+
+
+## Repeating all the steps on data to predict
+```{r}
+dataToPredict$CollegeTier = as.factor(dataToPredict$CollegeTier)
+dataToPredict$CollegeCode = as.factor(dataToPredict$CollegeCode)
+dataToPredict$CityCode = as.factor(dataToPredict$CityCode)
+dataToPredict$CityTier = as.factor(dataToPredict$CityTier)
+
+
+dataToPredict$Year.Of.Twelth.Completion = as.numeric(dataToPredict$Year.Of.Twelth.Completion)
+dataToPredict$Year.of.Graduation.Completion = as.numeric(dataToPredict$Year.of.Graduation.Completion)
+dataToPredict$Score.in.Logical.skill = as.numeric(dataToPredict$Score.in.Logical.skill)
+dataToPredict$Score.in.Quantitative.ability = as.numeric(dataToPredict$Score.in.Quantitative.ability)
+dataToPredict$Score.in.Quantitative.ability = as.numeric(dataToPredict$Score.in.Quantitative.ability)
+dataToPredict$Score.in.ComputerProgramming = as.numeric(dataToPredict$Score.in.ComputerProgramming)
+dataToPredict$Score.in.ElectronicsAndSemicon = as.numeric(dataToPredict$Score.in.ElectronicsAndSemicon)
+dataToPredict$Score.in.ComputerScience = as.numeric(dataToPredict$Score.in.ComputerScience)
+dataToPredict$Score.in.MechanicalEngg = as.numeric(dataToPredict$Score.in.MechanicalEngg)
+dataToPredict$Score.in.ElectricalEngg = as.numeric(dataToPredict$Score.in.ElectricalEngg)
+dataToPredict$Score.in.TelecomEngg = as.numeric(dataToPredict$Score.in.TelecomEngg)
+dataToPredict$Score.in.CivilEngg = as.numeric(dataToPredict$Score.in.CivilEngg)
+
+
+dataToPredict$Date.Of.Birth = as.Date(dataToPredict$Date.Of.Birth)
+```
+
+##Handling missing values
+### Train Dataset
+**Using central Imputation**
+```{r}
+#Checking dimensions before handling missing values
+dim(Train_Data)
+
+#Checking total number of missing values in the dataset
+sum(is.na(Train_Data))
+
+#Checking feature-wise missing values
+for (feature in names(Train_Data)) {
+    missing <- sum(is.na(Train_Data[,feature]))
+    if (missing > 0) {
+        print(c(feature,missing))
+      
+    }
+}
+
+# All the 18 na values are present in Date.Of.Birth column
+
+#Counting the remaining missing values
+library(dplyr)
+nrow(filter(Train_Data, School.Board.in.Tenth == "0"))
+nrow(filter(Train_Data, Board.in.Twelth == "0"))
+nrow(filter(Train_Data, Score.in.Domain == "-1"))
+
+
+# There as 11036 missing values
+
+#Assing NA values 
+
+Train_Data$School.Board.in.Tenth[Train_Data$School.Board.in.Tenth=="0"] <- NA
+Train_Data$Board.in.Twelth[Train_Data$Board.in.Twelth=="0"] <- NA
+Train_Data$Score.in.Domain[Train_Data$Score.in.Domain=="-1"] <- NA
+
+##########################################################################################
+
+#Imputting remanining values using centralimputation
+library(DMwR)
+
+Train_Data_no_NA<-centralImputation(Train_Data)
+
+#Train_Data_no_NA<-knnImputation(Train_Data)
+#View(Train_Data_no_NA)
+
+#Checking the number of missing values left after KNN imputation
+sum(is.na(Train_Data_no_NA))
+dim(Train_Data_no_NA)
+
+#########################################################################################
+
+#Saving a CSV file of imputed data to avoid imputation time while re-running the code  
+write.csv(Train_Data_no_NA, "Train_Data_no_NA_new.csv", row.names=F)
+
+```
+
+### dataToPredict Dataset
+**Using Central Imputation**
+```{r}
+#Checking dimensions before handling missing values
+dim(dataToPredict)
+
+#Checking total number of missing values in the dataset
+sum(is.na(dataToPredict))
+
+#Checking feature-wise missing values
+for (feature in names(dataToPredict)) {
+    missing <- sum(is.na(dataToPredict[,feature]))
+    if (missing > 0) {
+        print(c(feature,missing))
+      
+    }
+}
+
+# All the 12 na values are present in Date.Of.Birth column
+
+#Counting the remaining missing values
+library(dplyr)
+nrow(filter(dataToPredict, School.Board.in.Tenth == "0"))
+nrow(filter(dataToPredict, Board.in.Twelth == "0"))
+nrow(filter(dataToPredict, Score.in.Domain == "-1"))
+
+
+# There as 4575 missing values
+
+#Assing NA values 
+
+dataToPredict$School.Board.in.Tenth[dataToPredict$School.Board.in.Tenth=="0"] <- NA
+dataToPredict$Board.in.Twelth[dataToPredict$Board.in.Twelth=="0"] <- NA
+dataToPredict$Score.in.Domain[dataToPredict$Score.in.Domain=="-1"] <- NA
+
+##########################################################################################
+
+#Imputting remanining values using centralimputation
+library(DMwR)
+
+dataToPredict_no_NA<-centralImputation(dataToPredict)
+
+#dataToPredict_no_NA<-knnImputation(dataToPredict)
+#View(dataToPredict_no_NA)
+
+#Checking the number of missing values left after KNN imputation
+sum(is.na(dataToPredict_no_NA))
+dim(dataToPredict_no_NA)
+
+#########################################################################################
+
+#Saving a CSV file of imputed data to avoid imputation time while re-running the code  
+write.csv(dataToPredict_no_NA, "dataToPredict_no_NA_new.csv", row.names=F)
+
+```
+
+## Scaling the data
+```{r}
+library(vegan)
+Train_Data_no_NA_num = select_if(Train_Data_no_NA, is.numeric)
+Train_Data_no_NA_num$Candidate.ID = NULL
+Train_Data_no_NA_num$Pay_in_INR = NULL
+
+dataToPredict_no_NA_num = select_if(dataToPredict_no_NA, is.numeric)
+dataToPredict_no_NA_num$Candidate.ID = NULL
+
+Train_Data_no_NA_num_scaled =decostand(select_if(Train_Data_no_NA_num, is.numeric), method = "range")
+dataToPredict_no_NA_num_scaled =decostand(select_if(dataToPredict_no_NA_num, is.numeric), method = "range")
+
+#Merging the remaining data
+Train_Data_no_NA_not_num = Train_Data_no_NA %>% select_if(funs(!is.numeric(.)))
+Train_Data_no_NA_num_scaled = cbind(Train_Data_no_NA$Candidate.ID, Train_Data_no_NA$Pay_in_INR,Train_Data_no_NA_not_num, Train_Data_no_NA_num_scaled)
+
+dataToPredict_no_NA_not_num = dataToPredict_no_NA %>% select_if(funs(!is.numeric(.)))
+dataToPredict_no_NA_num_scaled = cbind(dataToPredict_no_NA$Candidate.ID,dataToPredict_no_NA_not_num, dataToPredict_no_NA_num_scaled)
+
+names(Train_Data_no_NA_num_scaled)[names(Train_Data_no_NA_num_scaled) == 'Train_Data_no_NA$Candidate.ID'] <- 'Candidate.ID'
+
+names(Train_Data_no_NA_num_scaled)[names(Train_Data_no_NA_num_scaled) == 'Train_Data_no_NA$Pay_in_INR'] <- 'Pay_in_INR'
+
+names(dataToPredict_no_NA_num_scaled)[names(dataToPredict_no_NA_num_scaled) == 'dataToPredict_no_NA$Candidate.ID'] <- 'Candidate.ID'
+
+#Saving a CSV file of imputed data to avoid imputation time while re-running the code 
+
+write.csv(Train_Data_no_NA_num_scaled, "Train_Data_no_NA_num_scaled_V2.csv", row.names=F)
+
+write.csv(dataToPredict_no_NA_num_scaled, "dataToPredict_no_NA_num_scaled_V2.csv", row.names=F)
+
+```
+
+
+## Exploratory Data Analysis - 
+
+###Checking the distribution of "Pay_in_INR"
+```{r}
+library(ggplot2)
+
+ggplot(Train_Data_no_NA, aes(Pay_in_INR)) + #, fill= as.factor(target) )) +
+  theme_bw() +
+  #facet_wrap(gender ~ qualification) +
+  #facet_grid(gender ~ qualification) +
+  geom_histogram(binwidth = 100000) +
+  labs(y = "individual count",
+       x = "Pay_in_INR(binwidth = 100000)",
+       title = "Pay_in_INR distribution")
+
+```
+
+###Checking the skewness of all the numerical data for checking possible transformations
+```{r}
+library(tidyr)
+library(purrr)
+
+Train_Data_no_NA_num_scaled %>%
+  purrr::keep(is.numeric) %>%
+  tidyr::gather() %>%
+  ggplot2::ggplot(aes(value))+
+  facet_wrap(~key, scales='free')+
+  geom_histogram()
+
+
+```
+### Checking correlation between all the attributes
+```{r}
+ 
+cor_data = cor(select_if(Train_Data_no_NA_num_scaled, is.numeric))
+
+library(corrplot)
+corrplot(cor_data, method = "number", tl.cex = 0.70)
+
+```
+
+
+###Scatterplot to check gender wise corelation between "Year.Of.Twelth.Completion" and "Year.of.Graduation.Completion"
+```{r }
+
+
+library(ggplot2)
+ggplot(Train_Data_no_NA_num_scaled, aes(Year.Of.Twelth.Completion, Year.of.Graduation.Completion, color = Gender)) +
+geom_point(shape = 16, size = 6, show.legend = TRUE) 
+```
